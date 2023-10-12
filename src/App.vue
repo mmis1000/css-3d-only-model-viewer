@@ -10,8 +10,10 @@ import tree from './assets/tree.obj?raw'
 
 const TARGET_WIDTH = 300
 
-const light = vec3.fromValues(-1, 1, 1)
+const light = vec3.fromValues(-1, -2, -3)
 vec3.normalize(light, light)
+
+const lightMode = ref<'diffuse' | 'normal'>('normal')
 
 const points: [vec3, vec3, vec3] = [
   [0, 0, 0],
@@ -210,17 +212,31 @@ const mappedTransforms = computed(() => {
     const transposed = mat4.create()
     mat4.transpose(transposed, matrix)
 
-    vec3.subtract(v1, face[2], face[0])
-    vec3.subtract(v2, face[1], face[0])
-    vec3.cross(n, v1, v2)
-    vec3.normalize(n, n)
-    vec3.add(sum, n, light)
-    // 0 ~ 1
-    const strength = vec3.length(sum) / 2
-    const color = `rgba(${255 * strength}, ${255 * strength}, ${255 * strength}, 1)`
+    if (lightMode.value === 'diffuse') {
+      vec3.subtract(v1, face[2], face[0])
+      vec3.subtract(v2, face[1], face[0])
+      vec3.cross(n, v1, v2)
+      vec3.normalize(n, n)
+      vec3.add(sum, n, light)
+      // 0 ~ 1
+      const strength = vec3.length(sum) / 2
+      const color = `rgba(${255 * strength}, ${255 * strength}, ${255 * strength}, 1)`
 
-    const transform = `matrix3d(${[...transposed].map(String).join(', ')})`
-    return  { transform, color }
+      const transform = `matrix3d(${[...transposed].map(String).join(', ')})`
+      return  { transform, color }
+    } else {
+      vec3.subtract(v1, face[2], face[0])
+      vec3.subtract(v2, face[1], face[0])
+      vec3.cross(n, v1, v2)
+      vec3.normalize(n, n)
+      const r = Math.abs(n[0] * 256)
+      const g = Math.abs(n[1] * 256)
+      const b = Math.abs(n[2] * 256)
+      const color = `rgba(${r}, ${g}, ${b}, 1)`
+
+      const transform = `matrix3d(${[...transposed].map(String).join(', ')})`
+      return  { transform, color }
+    }
   })
 })
 
@@ -240,13 +256,15 @@ addContent(tree, 'tree.obj')
 const loadSample = (newData: [vec3, vec3, vec3][]) => {
   faces.value = newData
 }
+
+const rotation = ref(true)
 </script>
 
 <template>
   <input class="hidden-input" type="file" ref="fileInput" @change="onFileChange"/>
   <div class="app" @drop="onDrop" @dragover.prevent>
     <div class="root">
-      <div class="scene">
+      <div class="scene" :class="{ rotation }">
         <div class="item" v-for="(item, index) of mappedTransforms" :key="index" :style="{
           transform: item.transform,
           borderLeftColor: item.color
@@ -259,6 +277,10 @@ const loadSample = (newData: [vec3, vec3, vec3][]) => {
         {{ sample.name  }} <br />
         {{ sample.faces.length }} faces
       </button>
+    </div>
+    <div class="controls">
+      <button class="control" @click="rotation = !rotation">Rotation: {{ rotation ? 'on' : 'off' }}</button>
+      <button class="control" @click="lightMode = lightMode === 'diffuse' ? 'normal' : 'diffuse'">Light: {{ lightMode }}</button>
     </div>
   </div>
 </template>
@@ -297,7 +319,10 @@ const loadSample = (newData: [vec3, vec3, vec3][]) => {
   height: 0;
   position: relative;
   transform-style: preserve-3d;
-  transform: scaleY(-1) rotateY(100deg);
+  transform: scaleY(-1) rotateY(0deg);
+}
+
+.scene.rotation {
   animation: 20s infinite linear r;
 }
 .item {
@@ -355,4 +380,27 @@ const loadSample = (newData: [vec3, vec3, vec3][]) => {
 .sample.add::before {
   transform: translate(-50%, -50%) rotate(90deg);
 }
+
+.controls {
+  position: fixed;
+  right: 0;
+  bottom: 104px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.control {
+  height: 40px;
+  border-radius: 4px;
+  border: 4px solid #777;
+  background: transparent;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px;
+}
+
 </style>

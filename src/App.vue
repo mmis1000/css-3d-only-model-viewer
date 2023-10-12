@@ -5,6 +5,8 @@ import { computed, ref, shallowRef } from 'vue';
 import teapot from './assets/teapot.obj?raw'
 import table from './assets/table.obj?raw'
 import streetLamp from './assets/street-lamp.obj?raw'
+import lowPolyTree from './assets/low-poly-tree.obj?raw'
+import tree from './assets/tree.obj?raw'
 
 const TARGET_WIDTH = 300
 
@@ -230,8 +232,10 @@ const samples = shallowRef<{ name: string, faces: [vec3, vec3, vec3][] }[]>([
 ])
 
 addContent(table, 'table.obj')
+addContent(lowPolyTree, 'low-poly-tree.obj')
 addContent(streetLamp, 'street-lamp.obj')
 addContent(teapot, 'teapot.obj')
+addContent(tree, 'tree.obj')
 
 const loadSample = (newData: [vec3, vec3, vec3][]) => {
   faces.value = newData

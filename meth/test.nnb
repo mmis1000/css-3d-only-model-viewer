@@ -1,0 +1,354 @@
+{
+    "cells": [
+        {
+            "language": "javascript",
+            "source": [
+                "import { display } from 'node-kernel';\nimport { ft, table, getPoint4 } from './utils';\nimport glMatrix from 'gl-matrix';"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "declare var display: typeof import('node-kernel').display\ndeclare var glMatrix: typeof import('gl-matrix')\ndeclare var getPoint4: typeof import('../../../../../../utils').getPoint4\ndeclare var table: typeof import('../../../../../../utils').table"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "const p1 = glMatrix.vec3.fromValues(0, 0, 0)\nconst p2 = glMatrix.vec3.fromValues(1, 0, 0)\nconst p3 = glMatrix.vec3.fromValues(0, 1, 0)\nconst p4 = glMatrix.vec3.create()\ngetPoint4(p4, p1, p2 ,p3)\n\nconst input = Float32Array.from([\n    p1[0], p2[0], p3[0], p4[0],\n    p1[1], p2[1], p3[1], p4[1],\n    p1[2], p2[2], p3[2], p4[2],\n    1, 1, 1, 1\n])\n\ntable(4, input)"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/html",
+                            "value": [
+                                "<style> table, th, tr { text-align: left; }</style><table><tr><td>0</td>\r",
+                                "<td>1</td>\r",
+                                "<td>0</td>\r",
+                                "<td>0</td></tr>\r",
+                                "<tr><td>0</td>\r",
+                                "<td>0</td>\r",
+                                "<td>1</td>\r",
+                                "<td>0</td></tr>\r",
+                                "<tr><td>0</td>\r",
+                                "<td>0</td>\r",
+                                "<td>0</td>\r",
+                                "<td>1</td></tr>\r",
+                                "<tr><td>1</td>\r",
+                                "<td>1</td>\r",
+                                "<td>1</td>\r",
+                                "<td>1</td></tr></table>"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "const inverted = glMatrix.mat4.create()\n\nglMatrix.mat4.invert(inverted, input)\n\ntable(4, inverted)"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/html",
+                            "value": [
+                                "<style> table, th, tr { text-align: left; }</style><table><tr><td>-1</td>\r",
+                                "<td>-1</td>\r",
+                                "<td>-1</td>\r",
+                                "<td>1</td></tr>\r",
+                                "<tr><td>1</td>\r",
+                                "<td>0</td>\r",
+                                "<td>0</td>\r",
+                                "<td>0</td></tr>\r",
+                                "<tr><td>0</td>\r",
+                                "<td>1</td>\r",
+                                "<td>0</td>\r",
+                                "<td>0</td></tr>\r",
+                                "<tr><td>0</td>\r",
+                                "<td>0</td>\r",
+                                "<td>1</td>\r",
+                                "<td>0</td></tr></table>"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "const t1 = glMatrix.vec3.fromValues(-3.000000, 1.800000, 0.000000)\nconst t2 = glMatrix.vec3.fromValues(-2.991600, 1.800000, -0.081000)\nconst t3 = glMatrix.vec3.fromValues(-2.991600, 1.800000, 0.081000)\nconst t4 = glMatrix.vec3.create()\ngetPoint4(t4, t2, p2 ,t3)\n\nconst target = Float32Array.from([\n    t1[0], t2[0], t3[0], t4[0],\n    t1[1], t2[1], t3[1], t4[1],\n    t1[2], t2[2], t3[2], t4[2],\n    1, 1, 1, 1\n])\ntable(4, target)"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/html",
+                            "value": [
+                                "<style> table, th, tr { text-align: left; }</style><table><tr><td>-3</td>\r",
+                                "<td>-2.9916000366210938</td>\r",
+                                "<td>-2.9916000366210938</td>\r",
+                                "<td>-3.2832000255584717</td></tr>\r",
+                                "<tr><td>1.7999999523162842</td>\r",
+                                "<td>1.7999999523162842</td>\r",
+                                "<td>1.7999999523162842</td>\r",
+                                "<td>1.1533607244491577</td></tr>\r",
+                                "<tr><td>0</td>\r",
+                                "<td>-0.08100000023841858</td>\r",
+                                "<td>0.08100000023841858</td>\r",
+                                "<td>-0.08100000023841858</td></tr>\r",
+                                "<tr><td>1</td>\r",
+                                "<td>1</td>\r",
+                                "<td>1</td>\r",
+                                "<td>1</td></tr></table>"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "const transformMatrix = glMatrix.mat4.create()\nglMatrix.mat4.mul(transformMatrix, inverted, target)\ntable(4, transformMatrix)"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/html",
+                            "value": [
+                                "<style> table, th, tr { text-align: left; }</style><table><tr><td>0.00839996337890625</td>\r",
+                                "<td>0.00839996337890625</td>\r",
+                                "<td>-0.2832000255584717</td>\r",
+                                "<td>-3</td></tr>\r",
+                                "<tr><td>0</td>\r",
+                                "<td>0</td>\r",
+                                "<td>-0.6466392278671265</td>\r",
+                                "<td>1.7999999523162842</td></tr>\r",
+                                "<tr><td>-0.08100000023841858</td>\r",
+                                "<td>0.08100000023841858</td>\r",
+                                "<td>-0.08100000023841858</td>\r",
+                                "<td>0</td></tr>\r",
+                                "<tr><td>0</td>\r",
+                                "<td>0</td>\r",
+                                "<td>0</td>\r",
+                                "<td>1</td></tr></table>"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "const out = glMatrix.mat4.create()\nglMatrix.mat4.mul(out, input, transformMatrix)\ntable(4, input)\ntable(4, transformMatrix)\ntable(4, out)\n\n"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/html",
+                            "value": [
+                                "<style> table, th, tr { text-align: left; }</style><table><tr><td>0</td>\r",
+                                "<td>1</td>\r",
+                                "<td>0</td>\r",
+                                "<td>0</td></tr>\r",
+                                "<tr><td>0</td>\r",
+                                "<td>0</td>\r",
+                                "<td>1</td>\r",
+                                "<td>0</td></tr>\r",
+                                "<tr><td>0</td>\r",
+                                "<td>0</td>\r",
+                                "<td>0</td>\r",
+                                "<td>1</td></tr>\r",
+                                "<tr><td>1</td>\r",
+                                "<td>1</td>\r",
+                                "<td>1</td>\r",
+                                "<td>1</td></tr></table>"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "items": [
+                        {
+                            "mime": "text/html",
+                            "value": [
+                                "<style> table, th, tr { text-align: left; }</style><table><tr><td>0.00839996337890625</td>\r",
+                                "<td>0.00839996337890625</td>\r",
+                                "<td>-0.2832000255584717</td>\r",
+                                "<td>-3</td></tr>\r",
+                                "<tr><td>0</td>\r",
+                                "<td>0</td>\r",
+                                "<td>-0.6466392278671265</td>\r",
+                                "<td>1.7999999523162842</td></tr>\r",
+                                "<tr><td>-0.08100000023841858</td>\r",
+                                "<td>0.08100000023841858</td>\r",
+                                "<td>-0.08100000023841858</td>\r",
+                                "<td>0</td></tr>\r",
+                                "<tr><td>0</td>\r",
+                                "<td>0</td>\r",
+                                "<td>0</td>\r",
+                                "<td>1</td></tr></table>"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "items": [
+                        {
+                            "mime": "text/html",
+                            "value": [
+                                "<style> table, th, tr { text-align: left; }</style><table><tr><td>-3</td>\r",
+                                "<td>-2.9916000366210938</td>\r",
+                                "<td>-2.9916000366210938</td>\r",
+                                "<td>-3.2832000255584717</td></tr>\r",
+                                "<tr><td>1.7999999523162842</td>\r",
+                                "<td>1.7999999523162842</td>\r",
+                                "<td>1.7999999523162842</td>\r",
+                                "<td>1.1533607244491577</td></tr>\r",
+                                "<tr><td>0</td>\r",
+                                "<td>-0.08100000023841858</td>\r",
+                                "<td>0.08100000023841858</td>\r",
+                                "<td>-0.08100000023841858</td></tr>\r",
+                                "<tr><td>1</td>\r",
+                                "<td>1</td>\r",
+                                "<td>1</td>\r",
+                                "<td>1</td></tr></table>"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "const flippedMatrix = glMatrix.mat4.create()\nglMatrix.mat4.transpose(flippedMatrix, transformMatrix)\n\ntable(4, flippedMatrix)"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/html",
+                            "value": [
+                                "<style> table, th, tr { text-align: left; }</style><table><tr><td>0.00839996337890625</td>\r",
+                                "<td>0</td>\r",
+                                "<td>-0.08100000023841858</td>\r",
+                                "<td>0</td></tr>\r",
+                                "<tr><td>0.00839996337890625</td>\r",
+                                "<td>0</td>\r",
+                                "<td>0.08100000023841858</td>\r",
+                                "<td>0</td></tr>\r",
+                                "<tr><td>-0.2832000255584717</td>\r",
+                                "<td>-0.6466392278671265</td>\r",
+                                "<td>-0.08100000023841858</td>\r",
+                                "<td>0</td></tr>\r",
+                                "<tr><td>-3</td>\r",
+                                "<td>1.7999999523162842</td>\r",
+                                "<td>0</td>\r",
+                                "<td>1</td></tr></table>"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "const transformOutput = glMatrix.vec4.create()\nconst transformInput = glMatrix.vec4.fromValues(...(p1 as [number, number, number]), 1)\n\nglMatrix.vec4.transformMat4(transformOutput, transformInput, flippedMatrix)\ntable(4, transformInput)\ndisplay.json(glMatrix.vec4.equals(glMatrix.vec4.fromValues(...t1 as [number, number, number,], 1), transformOutput))\ntable(4, transformOutput)"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/html",
+                            "value": [
+                                "<style> table, th, tr { text-align: left; }</style><table><tr><td>0</td>\r",
+                                "<td>0</td>\r",
+                                "<td>0</td>\r",
+                                "<td>1</td></tr></table>"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "items": [
+                        {
+                            "mime": "text/x-json",
+                            "value": [
+                                "true"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "items": [
+                        {
+                            "mime": "text/html",
+                            "value": [
+                                "<style> table, th, tr { text-align: left; }</style><table><tr><td>-3</td>\r",
+                                "<td>1.7999999523162842</td>\r",
+                                "<td>0</td>\r",
+                                "<td>1</td></tr></table>"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "const transformOutput2 = glMatrix.vec4.create()\nconst transformInput2 = glMatrix.vec4.fromValues(...(p2 as [number, number, number]), 1)\n\nglMatrix.vec4.transformMat4(transformOutput2, transformInput2, flippedMatrix)\ntable(4, transformInput2)\ndisplay.json(glMatrix.vec4.equals(glMatrix.vec4.fromValues(...t2 as [number, number, number,], 1), transformOutput2))\ntable(4, transformOutput2)"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/html",
+                            "value": [
+                                "<style> table, th, tr { text-align: left; }</style><table><tr><td>1</td>\r",
+                                "<td>0</td>\r",
+                                "<td>0</td>\r",
+                                "<td>1</td></tr></table>"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "items": [
+                        {
+                            "mime": "text/x-json",
+                            "value": [
+                                "true"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "items": [
+                        {
+                            "mime": "text/html",
+                            "value": [
+                                "<style> table, th, tr { text-align: left; }</style><table><tr><td>-2.9916000366210938</td>\r",
+                                "<td>1.7999999523162842</td>\r",
+                                "<td>-0.08100000023841858</td>\r",
+                                "<td>1</td></tr></table>"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

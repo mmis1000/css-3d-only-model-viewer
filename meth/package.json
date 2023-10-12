@@ -1,0 +1,20 @@
+{
+  "name": "css3d-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "gl-matrix": "^3.4.3",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.4",
+    "node-kernel": "^1.0.2",
+    "typescript": "^5.2.2"
+  }
+}

@@ -13,7 +13,7 @@ const TARGET_WIDTH = 300
 const light = vec3.fromValues(-1, -2, -3)
 vec3.normalize(light, light)
 
-const lightMode = ref<'diffuse' | 'normal'>('normal')
+const lightMode = ref<'diffuse' | 'normal'>('diffuse')
 
 const points: [vec3, vec3, vec3] = [
   [0, 0, 0],

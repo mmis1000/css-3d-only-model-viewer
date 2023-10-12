@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { mat4, vec3 } from 'gl-matrix';
 import { transformMatrixFromTwoPlane } from './utils/matrixHelper';
-import { computed, ref } from 'vue';
-
+import { computed, ref, shallowRef } from 'vue';
+import teapot from './assets/teapot.obj?raw'
+import table from './assets/table.obj?raw'
 const TARGET_WIDTH = 300
 
 const light = vec3.fromValues(-1, 1, 1)
@@ -120,9 +121,19 @@ const handleFile = async (file: File) => {
     }
   })
   console.log(res)
-  handleText(res)
+  addContent(res, file.name)
+  // const res = parseText(res)
 }
-const handleText = (text: string) => {
+
+const addContent = (text: string, filename: string) => {
+  const faces = parseText(text)
+  samples.value = [...samples.value, {
+    name: filename,
+    faces
+  }]
+}
+
+const parseText = (text: string) => {
   const lines = text.split(/\r?\n/g).filter(i => i.trim() !== '')
   const entries = lines.map(i => {
     const [type, ...values] = i.split(/\s+/g)
@@ -134,10 +145,10 @@ const handleText = (text: string) => {
     }
     return null
   }).filter(<T>(i: T): i is NonNullable<T> => i != null)
-  console.log(entries)
+  // console.log(entries)
   const vertexs = entries.filter(<T extends (typeof entries)[number]>(i: T): i is T & {0: 'v'} => i[0] === 'v')
   const faceIds = entries.filter(<T extends (typeof entries)[number]>(i: T): i is T & {0: 'f'}  => i[0] === 'f').map(i => i.slice(1)) as number[][]
-  console.log(vertexs, faces)
+  // console.log(vertexs, faces)
 
   const maxX = Math.max(...vertexs.map(i => i[1]))
   const minX = Math.min(...vertexs.map(i => i[1]))
@@ -174,11 +185,11 @@ const handleText = (text: string) => {
     }
   }
 
-  faces.value = mappedFaces
+  return mappedFaces
 }
 
 
-const faces = ref<[vec3, vec3, vec3][]>([
+const faces = shallowRef<[vec3, vec3, vec3][]>([
   ...targets
 ])
 
@@ -208,16 +219,39 @@ const mappedTransforms = computed(() => {
     return  { transform, color }
   })
 })
+
+const samples = shallowRef<{ name: string, faces: [vec3, vec3, vec3][] }[]>([
+  {
+    name: 'simple block',
+    faces: faces.value
+  }
+])
+
+addContent(table, 'table.obj')
+addContent(teapot, 'teapot.obj')
+
+const loadSample = (newData: [vec3, vec3, vec3][]) => {
+  faces.value = newData
+}
 </script>
 
 <template>
   <input class="hidden-input" type="file" ref="fileInput" @change="onFileChange"/>
-  <div class="root" @drop="onDrop" @dragover.prevent @click="fileInput?.click()">
-    <div class="scene">
-      <div class="item" v-for="(item, index) of mappedTransforms" :key="index" :style="{
-        transform: item.transform,
-        borderLeftColor: item.color
-      }"></div>
+  <div class="app" @drop="onDrop" @dragover.prevent>
+    <div class="root">
+      <div class="scene">
+        <div class="item" v-for="(item, index) of mappedTransforms" :key="index" :style="{
+          transform: item.transform,
+          borderLeftColor: item.color
+        }"></div>
+      </div>
+    </div>
+    <div class="samples">
+      <button class="sample add" @click="fileInput?.click()"></button>
+      <button class="sample" v-for="(sample, index) of samples" :key="index" @click="loadSample(sample.faces)">
+        {{ sample.name  }} <br />
+        {{ sample.faces.length }} faces
+      </button>
     </div>
   </div>
 </template>
@@ -268,5 +302,50 @@ const mappedTransforms = computed(() => {
   height: 0;
   border-bottom: 100px solid transparent;
   border-left: 100px solid rgba(100, 100, 100, 0.5);
+}
+
+.samples {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  overflow-x: auto;
+
+  border-top: 4px solid #777;
+}
+
+.sample {
+  margin: 4px;
+  width: 100px;
+  flex: 0 0 auto;
+  border: 4px solid #777;
+  border-radius: 4px;
+  position: relative;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #333;
+}
+
+.sample.add::after, .sample.add::before {
+  display: block;
+  position: absolute;
+  content: "";
+  left: 50%;
+  top: 50%;
+  height: 4px;
+  width: 32px;
+  background: #aaa;
+}
+.sample.add::after {
+  transform: translate(-50%, -50%);
+}
+.sample.add::before {
+  transform: translate(-50%, -50%) rotate(90deg);
 }
 </style>

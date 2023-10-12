@@ -293,13 +293,13 @@ const rotation = ref(true)
 
 @keyframes r {
   0% {
-    transform: scaleY(-1)  rotateX(0deg) rotateY(0deg);
+    transform: scaleY(-1)  rotateX(0deg) rotateY(1deg);
   }
   50% {
-    transform: scaleY(-1)  rotateX(180deg) rotateY(180deg);
+    transform: scaleY(-1)  rotateX(180deg) rotateY(181deg);
   }
   100% {
-    transform: scaleY(-1)  rotateX(360deg) rotateY(360deg);
+    transform: scaleY(-1)  rotateX(360deg) rotateY(361deg);
   }
 }
 
@@ -319,7 +319,7 @@ const rotation = ref(true)
   height: 0;
   position: relative;
   transform-style: preserve-3d;
-  transform: scaleY(-1) rotateY(0deg);
+  transform: scaleY(-1) rotateY(1deg);
 }
 
 .scene.rotation {
@@ -334,6 +334,7 @@ const rotation = ref(true)
   height: 0;
   border-bottom: 100px solid transparent;
   border-left: 100px solid rgba(100, 100, 100, 0.5);
+  filter: blur(0px);
 }
 
 .samples {

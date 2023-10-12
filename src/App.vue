@@ -4,6 +4,8 @@ import { transformMatrixFromTwoPlane } from './utils/matrixHelper';
 import { computed, ref, shallowRef } from 'vue';
 import teapot from './assets/teapot.obj?raw'
 import table from './assets/table.obj?raw'
+import streetLamp from './assets/street-lamp.obj?raw'
+
 const TARGET_WIDTH = 300
 
 const light = vec3.fromValues(-1, 1, 1)
@@ -228,6 +230,7 @@ const samples = shallowRef<{ name: string, faces: [vec3, vec3, vec3][] }[]>([
 ])
 
 addContent(table, 'table.obj')
+addContent(streetLamp, 'street-lamp.obj')
 addContent(teapot, 'teapot.obj')
 
 const loadSample = (newData: [vec3, vec3, vec3][]) => {

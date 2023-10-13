@@ -182,11 +182,11 @@ const parseText = (text: string) => {
   const mappedFaces: [vec3, vec3, vec3][] = []
 
   for (const face of faceIds) {
-    for (let i = 1; i < face.length - 1; i++) {
+    for (let i = 0; i < face.length - 2; i++) {
       mappedFaces.push([
         translate(vertexs[face[0] - 1].slice(1) as vec3),
-        translate(vertexs[face[1 + i - 1] - 1].slice(1) as vec3),
-        translate(vertexs[face[2 + i - 1] - 1].slice(1) as vec3)
+        translate(vertexs[face[1 + i] - 1].slice(1) as vec3),
+        translate(vertexs[face[2 + i] - 1].slice(1) as vec3)
       ])
     }
   }

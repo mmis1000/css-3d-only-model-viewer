@@ -7,6 +7,7 @@ import table from './assets/table.obj?raw'
 import streetLamp from './assets/street-lamp.obj?raw'
 import lowPolyTree from './assets/low-poly-tree.obj?raw'
 import tree from './assets/tree.obj?raw'
+import Corner from './components/Corner.vue'
 
 const TARGET_WIDTH = 300
 
@@ -283,6 +284,7 @@ const rotation = ref(true)
       <button class="control" @click="lightMode = lightMode === 'diffuse' ? 'normal' : 'diffuse'">Light: {{ lightMode }}</button>
     </div>
   </div>
+  <Corner />
 </template>
 
 <style scoped>

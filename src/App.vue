@@ -1,111 +1,119 @@
 <script setup lang="ts">
-import { mat4, vec3 } from 'gl-matrix';
-import { transformMatrixFromTwoPlane } from './utils/matrixHelper';
-import { computed, ref, shallowRef } from 'vue';
-import teapot from './assets/teapot.obj?raw'
-import table from './assets/table.obj?raw'
-import streetLamp from './assets/street-lamp.obj?raw'
-import lowPolyTree from './assets/low-poly-tree.obj?raw'
-import tree from './assets/tree.obj?raw'
-import Corner from './components/Corner.vue'
+import { vec3 } from "gl-matrix"
+import { computed, ref, shallowRef } from "vue"
+import teapot from "./assets/teapot.obj?raw"
+import table from "./assets/table.obj?raw"
+import streetLamp from "./assets/street-lamp.obj?raw"
+import lowPolyTree from "./assets/low-poly-tree.obj?raw"
+import tree from "./assets/tree.obj?raw"
+import Corner from "./components/Corner.vue"
+import { mapToTransformAndColor } from "./utils/matrixHelper"
+import { renderToHtml } from "./utils/exportToHtml"
+import { downloadBlob } from "./utils/downloadBlob"
+
+interface ParsedModel {
+  name: string
+  faces: [vec3, vec3, vec3][]
+}
 
 const TARGET_WIDTH = 300
 
 const light = vec3.fromValues(-1, -2, -3)
 vec3.normalize(light, light)
 
-const lightMode = ref<'diffuse' | 'normal'>('diffuse')
+const lightMode = ref<"diffuse" | "normal">("diffuse")
 
 const points: [vec3, vec3, vec3] = [
   [0, 0, 0],
   [100, 0, 0],
-  [0, 100, 0],
+  [0, 100, 0]
 ]
-const targets: [vec3, vec3, vec3][] = [
+
+const defaultModel: [vec3, vec3, vec3][] = [
   [
     [0, 0, 0],
     [100, 0, 0],
-    [0, 100, 0],
+    [0, 100, 0]
   ],
   [
     [0, 100, 0],
     [100, 0, 0],
-    [100, 100, 0],
+    [100, 100, 0]
   ],
   [
     [100, 0, 100],
     [0, 0, 100],
-    [0, 100, 100],
+    [0, 100, 100]
   ],
   [
     [100, 0, 100],
     [0, 100, 100],
-    [100, 100, 100],
-  ],
-  [
-    [0, 0, 0],
-    [0, 0, 100],
-    [0, 100, 0],
-  ],
-  [
-    [0, 100, 0],
-    [0, 0, 100],
-    [0, 100, 100],
-  ],
-  [
-    [100, 0, 100],
-    [100, 0, 0],
-    [100, 100, 0],
-  ],
-  [
-    [100, 0, 100],
-    [100, 100, 0],
-    [100, 100, 100],
+    [100, 100, 100]
   ],
   [
     [0, 0, 0],
     [0, 0, 100],
+    [0, 100, 0]
+  ],
+  [
+    [0, 100, 0],
+    [0, 0, 100],
+    [0, 100, 100]
+  ],
+  [
+    [100, 0, 100],
     [100, 0, 0],
+    [100, 100, 0]
+  ],
+  [
+    [100, 0, 100],
+    [100, 100, 0],
+    [100, 100, 100]
+  ],
+  [
+    [0, 0, 0],
+    [0, 0, 100],
+    [100, 0, 0]
   ],
   [
     [100, 0, 0],
     [0, 0, 100],
-    [100, 0, 100],
+    [100, 0, 100]
   ],
   [
     [0, 100, 100],
     [0, 100, 0],
-    [100, 100, 0],
+    [100, 100, 0]
   ],
   [
     [0, 100, 100],
     [100, 100, 0],
-    [100, 100, 100],
+    [100, 100, 100]
   ]
 ]
 const onDrop = (ev: DragEvent) => {
-  ev.preventDefault();
+  ev.preventDefault()
 
   if (ev.dataTransfer == null) return
 
   if (ev.dataTransfer.items) {
     // Use DataTransferItemList interface to access the file(s)
-    [...ev.dataTransfer.items].forEach((item, i) => {
+    ;[...ev.dataTransfer.items].forEach((item, i) => {
       // If dropped items aren't files, reject them
       if (item.kind === "file") {
-        const file = item.getAsFile();
+        const file = item.getAsFile()
         if (file) {
-          console.log(`… file[${i}].name = ${file.name}`);
-        handleFile(file)
+          console.log(`… file[${i}].name = ${file.name}`)
+          handleFile(file)
         }
       }
-    });
+    })
   } else {
     // Use DataTransfer interface to access the file(s)
-    [...ev.dataTransfer.files].forEach((file, i) => {
-      console.log(`… file[${i}].name = ${file.name}`);
+    ;[...ev.dataTransfer.files].forEach((file, i) => {
+      console.log(`… file[${i}].name = ${file.name}`)
       handleFile(file)
-    });
+    })
   }
 }
 const fileInput = ref<HTMLInputElement>()
@@ -117,7 +125,7 @@ const onFileChange = (ev: Event) => {
       handleFile(target.files[i])
     }
   }
-  target.value = ''
+  target.value = ""
 }
 const handleFile = async (file: File) => {
   const res = await new Promise<string>((resolve) => {
@@ -134,44 +142,63 @@ const handleFile = async (file: File) => {
 
 const addContent = (text: string, filename: string) => {
   const faces = parseText(text)
-  samples.value = [...samples.value, {
-    name: filename,
-    faces
-  }]
+  samples.value = [
+    ...samples.value,
+    {
+      name: filename,
+      faces
+    }
+  ]
 }
 
 const parseText = (text: string) => {
-  const lines = text.split(/\r?\n/g).filter(i => i.trim() !== '')
-  const entries = lines.map(i => {
-    const [type, ...values] = i.split(/\s+/g)
-    if (type === 'f') {
-      return ['f' as 'f', ...(values).map(i => Number(i.split('/')[0])) as number[]] as const
-    }
-    if (type === 'v') {
-      return ['v' as 'v', ...(values).map(Number) as [number, number, number]] as const
-    }
-    return null
-  }).filter(<T>(i: T): i is NonNullable<T> => i != null)
+  const lines = text.split(/\r?\n/g).filter((i) => i.trim() !== "")
+  const entries = lines
+    .map((i) => {
+      const [type, ...values] = i.split(/\s+/g)
+      if (type === "f") {
+        return [
+          "f" as "f",
+          ...(values.map((i) => Number(i.split("/")[0])) as number[])
+        ] as const
+      }
+      if (type === "v") {
+        return [
+          "v" as "v",
+          ...(values.map(Number) as [number, number, number])
+        ] as const
+      }
+      return null
+    })
+    .filter(<T>(i: T): i is NonNullable<T> => i != null)
   // console.log(entries)
-  const vertexs = entries.filter(<T extends (typeof entries)[number]>(i: T): i is T & {0: 'v'} => i[0] === 'v')
-  const faceIds = entries.filter(<T extends (typeof entries)[number]>(i: T): i is T & {0: 'f'}  => i[0] === 'f').map(i => i.slice(1)) as number[][]
+  const vertexs = entries.filter(
+    <T extends (typeof entries)[number]>(i: T): i is T & { 0: "v" } =>
+      i[0] === "v"
+  )
+  const faceIds = entries
+    .filter(
+      <T extends (typeof entries)[number]>(i: T): i is T & { 0: "f" } =>
+        i[0] === "f"
+    )
+    .map((i) => i.slice(1)) as number[][]
   // console.log(vertexs, faces)
 
-  const maxX = Math.max(...vertexs.map(i => i[1]))
-  const minX = Math.min(...vertexs.map(i => i[1]))
-  const maxY = Math.max(...vertexs.map(i => i[2]))
-  const minY = Math.min(...vertexs.map(i => i[2]))
-  const maxZ = Math.max(...vertexs.map(i => i[3]))
-  const minZ = Math.min(...vertexs.map(i => i[3]))
+  const maxX = Math.max(...vertexs.map((i) => i[1]))
+  const minX = Math.min(...vertexs.map((i) => i[1]))
+  const maxY = Math.max(...vertexs.map((i) => i[2]))
+  const minY = Math.min(...vertexs.map((i) => i[2]))
+  const maxZ = Math.max(...vertexs.map((i) => i[3]))
+  const minZ = Math.min(...vertexs.map((i) => i[3]))
 
   const lX = maxX - minX
   const lY = maxY - minY
   const lZ = maxZ - minZ
 
   const scale = TARGET_WIDTH / Math.max(lX, lY, lZ)
-  const xOffset = (maxX + minX) / 2 * -1
-  const yOffset = (maxY + minY) / 2 * -1
-  const zOffset = (maxZ + minZ) / 2 * -1
+  const xOffset = ((maxX + minX) / 2) * -1
+  const yOffset = ((maxY + minY) / 2) * -1
+  const zOffset = ((maxZ + minZ) / 2) * -1
 
   const translate = (p: vec3): vec3 => {
     return [
@@ -195,113 +222,109 @@ const parseText = (text: string) => {
   return mappedFaces
 }
 
-
-const faces = shallowRef<[vec3, vec3, vec3][]>([
-  ...targets
-])
+const selectedModel = shallowRef<ParsedModel>({
+  name: "simple block",
+  faces: [...defaultModel]
+})
 
 const mappedTransforms = computed(() => {
-  
-  const v1 = vec3.create()
-  const v2 = vec3.create()
-  const n = vec3.create()
-  const sum = vec3.create()
-
-  return faces.value.map((face) => {
-    const matrix = mat4.create()
-    transformMatrixFromTwoPlane(matrix, ...points, ...face)
-    const transposed = mat4.create()
-    mat4.transpose(transposed, matrix)
-
-    if (lightMode.value === 'diffuse') {
-      vec3.subtract(v1, face[2], face[0])
-      vec3.subtract(v2, face[1], face[0])
-      vec3.cross(n, v1, v2)
-      vec3.normalize(n, n)
-      vec3.add(sum, n, light)
-      // 0 ~ 1
-      const strength = vec3.length(sum) / 2
-      const color = `rgba(${255 * strength}, ${255 * strength}, ${255 * strength}, 1)`
-
-      const transform = `matrix3d(${[...transposed].map(String).join(', ')})`
-      return  { transform, color }
-    } else {
-      vec3.subtract(v1, face[2], face[0])
-      vec3.subtract(v2, face[1], face[0])
-      vec3.cross(n, v1, v2)
-      vec3.normalize(n, n)
-      const r = Math.abs(n[0] * 256)
-      const g = Math.abs(n[1] * 256)
-      const b = Math.abs(n[2] * 256)
-      const color = `rgba(${r}, ${g}, ${b}, 1)`
-
-      const transform = `matrix3d(${[...transposed].map(String).join(', ')})`
-      return  { transform, color }
-    }
+  return selectedModel.value.faces.map((face) => {
+    return mapToTransformAndColor(points, face, lightMode.value, light)
   })
 })
 
-const samples = shallowRef<{ name: string, faces: [vec3, vec3, vec3][] }[]>([
-  {
-    name: 'simple block',
-    faces: faces.value
-  }
+const samples = shallowRef<ParsedModel[]>([
+  selectedModel.value
 ])
 
-addContent(table, 'table.obj')
-addContent(lowPolyTree, 'low-poly-tree.obj')
-addContent(streetLamp, 'street-lamp.obj')
-addContent(teapot, 'teapot.obj')
-addContent(tree, 'tree.obj')
+addContent(table, "table.obj")
+addContent(lowPolyTree, "low-poly-tree.obj")
+addContent(streetLamp, "street-lamp.obj")
+addContent(teapot, "teapot.obj")
+addContent(tree, "tree.obj")
 
-const loadSample = (newData: [vec3, vec3, vec3][]) => {
-  faces.value = newData
+const loadSample = (newData: ParsedModel) => {
+  selectedModel.value = newData
 }
 
 const rotation = ref(true)
+
+const exportToFile = () => {
+  const current = selectedModel.value
+  const html = renderToHtml(current.name, current.faces, lightMode.value, rotation.value )
+  console.log(html)
+  const blob = new Blob([html], { type: 'text/html' })
+  downloadBlob(blob, current.name + '.html')
+}
 </script>
 
 <template>
-  <input class="hidden-input" type="file" ref="fileInput" @change="onFileChange"/>
+  <input
+    class="hidden-input"
+    type="file"
+    ref="fileInput"
+    @change="onFileChange"
+  />
   <div class="app" @drop="onDrop" @dragover.prevent>
     <div class="root">
       <div class="scene" :class="{ rotation }">
-        <div class="item" v-for="(item, index) of mappedTransforms" :key="index" :style="{
-          transform: item.transform,
-          borderLeftColor: item.color
-        }"></div>
+        <div
+          class="item"
+          v-for="(item, index) of mappedTransforms"
+          :key="index"
+          :style="{
+            transform: item.transform,
+            borderLeftColor: item.color
+          }"
+        ></div>
       </div>
     </div>
     <div class="samples">
       <button class="sample add" @click="fileInput?.click()"></button>
-      <button class="sample" v-for="(sample, index) of samples" :key="index" @click="loadSample(sample.faces)">
-        {{ sample.name  }} <br />
+      <button
+        class="sample"
+        v-for="(sample, index) of samples"
+        :key="index"
+        @click="loadSample(sample)"
+      >
+        {{ sample.name }} <br />
         {{ sample.faces.length }} faces
       </button>
     </div>
     <div class="controls">
-      <button class="control" @click="rotation = !rotation">Rotation: {{ rotation ? 'on' : 'off' }}</button>
-      <button class="control" @click="lightMode = lightMode === 'diffuse' ? 'normal' : 'diffuse'">Light: {{ lightMode }}</button>
+      <button class="control" @click="exportToFile">
+        Export as html
+      </button>
+      <button class="control" @click="rotation = !rotation">
+        Rotation: {{ rotation ? "on" : "off" }}
+      </button>
+      <button
+        class="control"
+        @click="lightMode = lightMode === 'diffuse' ? 'normal' : 'diffuse'"
+      >
+        Light: {{ lightMode }}
+      </button>
     </div>
   </div>
   <Corner />
 </template>
 
 <style scoped>
-
 .hidden-input {
   visibility: hidden;
 }
 
 @keyframes r {
   0% {
-    transform: scaleY(-1)  rotateX(0deg) rotateY(1deg);
+    transform: scaleY(-1) rotateX(0deg) rotateY(1deg);
   }
+
   50% {
-    transform: scaleY(-1)  rotateX(180deg) rotateY(181deg);
+    transform: scaleY(-1) rotateX(180deg) rotateY(181deg);
   }
+
   100% {
-    transform: scaleY(-1)  rotateX(360deg) rotateY(361deg);
+    transform: scaleY(-1) rotateX(360deg) rotateY(361deg);
   }
 }
 
@@ -316,6 +339,7 @@ const rotation = ref(true)
   right: 0;
   perspective: 800px;
 }
+
 .scene {
   width: 0;
   height: 0;
@@ -327,6 +351,7 @@ const rotation = ref(true)
 .scene.rotation {
   animation: 20s infinite linear r;
 }
+
 .item {
   position: absolute;
   left: 0;
@@ -367,7 +392,8 @@ const rotation = ref(true)
   background: #333;
 }
 
-.sample.add::after, .sample.add::before {
+.sample.add::after,
+.sample.add::before {
   display: block;
   position: absolute;
   content: "";
@@ -377,9 +403,11 @@ const rotation = ref(true)
   width: 32px;
   background: #aaa;
 }
+
 .sample.add::after {
   transform: translate(-50%, -50%);
 }
+
 .sample.add::before {
   transform: translate(-50%, -50%) rotate(90deg);
 }
@@ -405,5 +433,4 @@ const rotation = ref(true)
   justify-content: center;
   margin: 4px;
 }
-
 </style>

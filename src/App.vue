@@ -15,73 +15,13 @@ import { ParsedModel, FaceData } from "./interfaces"
 import { INITIAL_FACES, LIGHT } from "./constants"
 import TexturedItem from "./components/TexturedItem.vue"
 import lowPolyTreeTexture from "./assets/low-poly-tree.png"
+import block from "./assets/block.obj?raw"
+import blockTexture from "./assets/block.png"
 
 const TARGET_WIDTH = 300
 
 const lightMode = ref<"diffuse" | "normal">("diffuse")
 
-const defaultModel: [vec3, vec3, vec3][] = [
-  [
-    [0, 0, 0],
-    [100, 0, 0],
-    [0, 100, 0]
-  ],
-  [
-    [0, 100, 0],
-    [100, 0, 0],
-    [100, 100, 0]
-  ],
-  [
-    [100, 0, 100],
-    [0, 0, 100],
-    [0, 100, 100]
-  ],
-  [
-    [100, 0, 100],
-    [0, 100, 100],
-    [100, 100, 100]
-  ],
-  [
-    [0, 0, 0],
-    [0, 0, 100],
-    [0, 100, 0]
-  ],
-  [
-    [0, 100, 0],
-    [0, 0, 100],
-    [0, 100, 100]
-  ],
-  [
-    [100, 0, 100],
-    [100, 0, 0],
-    [100, 100, 0]
-  ],
-  [
-    [100, 0, 100],
-    [100, 100, 0],
-    [100, 100, 100]
-  ],
-  [
-    [0, 0, 0],
-    [0, 0, 100],
-    [100, 0, 0]
-  ],
-  [
-    [100, 0, 0],
-    [0, 0, 100],
-    [100, 0, 100]
-  ],
-  [
-    [0, 100, 100],
-    [0, 100, 0],
-    [100, 100, 0]
-  ],
-  [
-    [0, 100, 100],
-    [100, 100, 0],
-    [100, 100, 100]
-  ]
-]
 const onDrop = (ev: DragEvent) => {
   ev.preventDefault()
 
@@ -131,8 +71,8 @@ const handleFile = async (file: File) => {
   // const res = parseText(res)
 }
 
-const addContent = (text: string, filename: string, texture?: string) => {
-  const faces = parseText(text)
+const addContent = (text: string, filename: string, texture?: string, width = TARGET_WIDTH) => {
+  const faces = parseText(text, width)
   samples.value = [
     ...samples.value,
     {
@@ -143,7 +83,7 @@ const addContent = (text: string, filename: string, texture?: string) => {
   ]
 }
 
-const parseText = (text: string) => {
+const parseText = (text: string, width = TARGET_WIDTH) => {
   const lines = text.split(/\r?\n/g).filter((i) => i.trim() !== "")
   const entries = lines
     .map((i) => {
@@ -191,7 +131,7 @@ const parseText = (text: string) => {
   const lY = maxY - minY
   const lZ = maxZ - minZ
 
-  const scale = TARGET_WIDTH / Math.max(lX, lY, lZ)
+  const scale = width / Math.max(lX, lY, lZ)
   const xOffset = ((maxX + minX) / 2) * -1
   const yOffset = ((maxY + minY) / 2) * -1
   const zOffset = ((maxZ + minZ) / 2) * -1
@@ -230,13 +170,10 @@ const parseText = (text: string) => {
   return mappedFaces
 }
 
-const selectedModel = shallowRef<ParsedModel>({
-  name: "simple block",
-  faces: [...defaultModel.map((v) => ({ vertex: v }))]
-})
+const selectedModel = shallowRef<ParsedModel | null>(null)
 
 const mappedTransforms = computed(() => {
-  return selectedModel.value.faces.map((face) => {
+  return selectedModel.value?.faces.map((face) => {
     const res = mapToTransformAndColor(INITIAL_FACES, face.vertex, lightMode.value, LIGHT)
     const textureTransform =
       enableTexture.value && face.uv
@@ -253,13 +190,15 @@ const mappedTransforms = computed(() => {
   })
 })
 
-const samples = shallowRef<ParsedModel[]>([selectedModel.value])
+const samples = shallowRef<ParsedModel[]>([])
 
+addContent(block, "block.obj", blockTexture, 100)
 addContent(table, "table.obj", tableTexture)
 addContent(lowPolyTree, "low-poly-tree.obj", lowPolyTreeTexture)
 addContent(streetLamp, "street-lamp.obj")
 addContent(teapot, "teapot.obj")
 addContent(tree, "tree.obj")
+selectedModel.value = samples.value[0]
 
 const loadSample = (newData: ParsedModel) => {
   selectedModel.value = newData
@@ -269,6 +208,7 @@ const rotation = ref(true)
 
 const exportToFile = () => {
   const current = selectedModel.value
+  if (current == null) return
   const html = renderToHtml(current.name, current.faces, lightMode.value, rotation.value)
   console.log(html)
   const blob = new Blob([html], { type: "text/html" })
@@ -281,7 +221,7 @@ const enableTexture = ref(false)
   <input class="hidden-input" type="file" ref="fileInput" @change="onFileChange" />
   <div class="app" @drop="onDrop" @dragover.prevent>
     <div class="root">
-      <div class="scene" :class="{ rotation }">
+      <div v-if="selectedModel" class="scene" :class="{ rotation }">
         <template v-for="(item, _index) of mappedTransforms" :key="_index">
           <template v-if="!enableTexture || !item.textureTransform || selectedModel.texture == null">
             <div

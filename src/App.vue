@@ -3,6 +3,7 @@ import { vec2, vec3 } from "gl-matrix"
 import { computed, ref, shallowRef } from "vue"
 import teapot from "./assets/teapot.obj?raw"
 import table from "./assets/table.obj?raw"
+import tableTexture from "./assets/table.png"
 import streetLamp from "./assets/street-lamp.obj?raw"
 import lowPolyTree from "./assets/low-poly-tree.obj?raw"
 import tree from "./assets/tree.obj?raw"
@@ -254,7 +255,7 @@ const mappedTransforms = computed(() => {
 
 const samples = shallowRef<ParsedModel[]>([selectedModel.value])
 
-addContent(table, "table.obj")
+addContent(table, "table.obj", tableTexture)
 addContent(lowPolyTree, "low-poly-tree.obj", lowPolyTreeTexture)
 addContent(streetLamp, "street-lamp.obj")
 addContent(teapot, "teapot.obj")

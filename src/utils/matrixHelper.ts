@@ -1,4 +1,4 @@
-import { mat4, vec3 } from "gl-matrix"
+import { mat3, mat4, vec2, vec3 } from "gl-matrix"
 
 export let getPoint4: (out: vec3, p1: vec3, p2: vec3, p3: vec3) => void
 
@@ -120,5 +120,41 @@ export let mapToTransformAndColor: (
       const transform = `matrix3d(${[...transposed].map(String).join(", ")})`
       return { transform, color }
     }
+  }
+}
+
+export let projectUV: (
+  initialFace: [vec2, vec2, vec2],
+  face: [vec2, vec2, vec2],
+) => string
+
+{
+  const sourceInverted = mat3.create()
+  const result = mat3.create()
+  const transposed = mat3.create()
+  projectUV = (
+    initialFace: [vec2, vec2, vec2],
+    face: [vec2, vec2, vec2],
+  ): string => {
+    const matrix3Source = mat3.fromValues(
+      initialFace[0][0], initialFace[1][0], initialFace[2][0],
+      initialFace[0][1], initialFace[1][1], initialFace[2][1],
+      1, 1, 1
+    )
+    mat3.invert(sourceInverted, matrix3Source)
+    const matrix3Target = mat3.fromValues(
+      face[0][0], face[1][0], face[2][0],
+      face[0][1], face[1][1], face[2][1],
+      1, 1, 1
+    )
+    mat3.mul(result, sourceInverted, matrix3Target)
+    mat3.transpose(transposed, result)
+    const transposed2dMatrix = [
+      transposed[0], transposed[1],
+      transposed[3], transposed[4],
+      transposed[6], transposed[7]
+    ]
+    const transform = `matrix(${[...transposed2dMatrix].map(String).join(", ")})`
+    return transform
   }
 }

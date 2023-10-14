@@ -1,14 +1,6 @@
-import { vec3 } from "gl-matrix"
 import { mapToTransformAndColor } from "./matrixHelper"
-
-const light = vec3.fromValues(-1, -2, -3)
-vec3.normalize(light, light)
-
-const initialFaces: [vec3, vec3, vec3] = [
-  [0, 0, 0],
-  [100, 0, 0],
-  [0, 100, 0]
-]
+import { FaceData } from "../interfaces"
+import { INITIAL_FACES, LIGHT } from '../constants'
 
 const encodedStr = (rawStr: string) =>
   rawStr.replace(/[\u00A0-\u9999<>\&]/g, function (i) {
@@ -97,12 +89,12 @@ ${body}
 
 export const renderToHtml = (
   title: string,
-  faces: [vec3, vec3, vec3][],
+  faces: FaceData[],
   lightMode: "diffuse" | "normal",
   hasRotation: boolean
 ) => {
   const elements = faces.map((face) => {
-    return mapToTransformAndColor(initialFaces, face, lightMode, light)
+    return mapToTransformAndColor(INITIAL_FACES, face.vertex, lightMode, LIGHT)
   })
 
   const body = elements

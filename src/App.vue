@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { vec3 } from "gl-matrix"
+import { vec2, vec3 } from "gl-matrix"
 import { computed, ref, shallowRef } from "vue"
 import teapot from "./assets/teapot.obj?raw"
 import table from "./assets/table.obj?raw"
@@ -7,27 +7,17 @@ import streetLamp from "./assets/street-lamp.obj?raw"
 import lowPolyTree from "./assets/low-poly-tree.obj?raw"
 import tree from "./assets/tree.obj?raw"
 import Corner from "./components/Corner.vue"
-import { mapToTransformAndColor } from "./utils/matrixHelper"
+import { mapToTransformAndColor, projectUV } from "./utils/matrixHelper"
 import { renderToHtml } from "./utils/exportToHtml"
 import { downloadBlob } from "./utils/downloadBlob"
-
-interface ParsedModel {
-  name: string
-  faces: [vec3, vec3, vec3][]
-}
+import { ParsedModel, FaceData } from "./interfaces"
+import { INITIAL_FACES, LIGHT } from "./constants"
+import TexturedItem from './components/TexturedItem.vue'
+import lowPolyTreeTexture from "./assets/low-poly-tree.png"
 
 const TARGET_WIDTH = 300
 
-const light = vec3.fromValues(-1, -2, -3)
-vec3.normalize(light, light)
-
 const lightMode = ref<"diffuse" | "normal">("diffuse")
-
-const points: [vec3, vec3, vec3] = [
-  [0, 0, 0],
-  [100, 0, 0],
-  [0, 100, 0]
-]
 
 const defaultModel: [vec3, vec3, vec3][] = [
   [
@@ -159,29 +149,33 @@ const parseText = (text: string) => {
       if (type === "f") {
         return [
           "f" as "f",
-          ...(values.map((i) => Number(i.split("/")[0])) as number[])
+          ...values.map(
+            (i) =>
+              i.split("/").map((i) => ((i != null && i != '') ? Number(i) : undefined)) as [
+                v: number,
+                vt: number | undefined,
+                vn: number | undefined
+              ]
+          )
         ] as const
       }
       if (type === "v") {
-        return [
-          "v" as "v",
-          ...(values.map(Number) as [number, number, number])
-        ] as const
+        return ["v" as "v", ...(values.map(Number) as [number, number, number])] as const
+      }
+      if (type === "vt") {
+        return ["vt" as "vt", ...(values.map(Number) as [number, number])] as const
       }
       return null
     })
     .filter(<T>(i: T): i is NonNullable<T> => i != null)
   // console.log(entries)
-  const vertexs = entries.filter(
-    <T extends (typeof entries)[number]>(i: T): i is T & { 0: "v" } =>
-      i[0] === "v"
+  const vertexs = entries.filter(<T extends (typeof entries)[number]>(i: T): i is T & { 0: "v" } => i[0] === "v")
+  const textureVertexs = entries.filter(
+    <T extends (typeof entries)[number]>(i: T): i is T & { 0: "vt" } => i[0] === "vt"
   )
   const faceIds = entries
-    .filter(
-      <T extends (typeof entries)[number]>(i: T): i is T & { 0: "f" } =>
-        i[0] === "f"
-    )
-    .map((i) => i.slice(1)) as number[][]
+    .filter(<T extends (typeof entries)[number]>(i: T): i is T & { 0: "f" } => i[0] === "f")
+    .map((i) => i.slice(1)) as [v: number, vt: number | undefined, vn: number | undefined][][]
   // console.log(vertexs, faces)
 
   const maxX = Math.max(...vertexs.map((i) => i[1]))
@@ -201,21 +195,33 @@ const parseText = (text: string) => {
   const zOffset = ((maxZ + minZ) / 2) * -1
 
   const translate = (p: vec3): vec3 => {
-    return [
-      (p[0] + xOffset) * scale,
-      (p[1] + yOffset) * scale,
-      (p[2] + zOffset) * scale
-    ]
+    return [(p[0] + xOffset) * scale, (p[1] + yOffset) * scale, (p[2] + zOffset) * scale]
   }
-  const mappedFaces: [vec3, vec3, vec3][] = []
+  const mappedFaces: FaceData[] = []
 
   for (const face of faceIds) {
     for (let i = 0; i < face.length - 2; i++) {
-      mappedFaces.push([
-        translate(vertexs[face[0] - 1].slice(1) as vec3),
-        translate(vertexs[face[1 + i] - 1].slice(1) as vec3),
-        translate(vertexs[face[2 + i] - 1].slice(1) as vec3)
-      ])
+      const first = face[0]
+
+      const vertex: [vec3, vec3, vec3] = [
+        translate(vertexs[face[0][0] - 1].slice(1) as vec3),
+        translate(vertexs[face[1 + i][0] - 1].slice(1) as vec3),
+        translate(vertexs[face[2 + i][0] - 1].slice(1) as vec3)
+      ]
+
+      const uv: [vec2, vec2, vec2] | undefined =
+        first[1] != null
+          ? [
+            textureVertexs[face[0][1]! - 1].slice(1) as vec2,
+            textureVertexs[face[1 + i][1]! - 1].slice(1) as vec2,
+            textureVertexs[face[2 + i][1]! - 1].slice(1) as vec2
+          ]
+          : undefined
+
+      mappedFaces.push({
+        vertex,
+        uv
+      })
     }
   }
 
@@ -224,18 +230,21 @@ const parseText = (text: string) => {
 
 const selectedModel = shallowRef<ParsedModel>({
   name: "simple block",
-  faces: [...defaultModel]
+  faces: [...defaultModel.map((v) => ({ vertex: v }))]
 })
 
 const mappedTransforms = computed(() => {
   return selectedModel.value.faces.map((face) => {
-    return mapToTransformAndColor(points, face, lightMode.value, light)
+    const res = mapToTransformAndColor(INITIAL_FACES, face.vertex, lightMode.value, LIGHT)
+    const textureTransform = (uv.value && face.uv) ? projectUV(face.uv, [[0, 0], [1, 0], [0, 1]]) : undefined
+    return {
+      ...res,
+      textureTransform
+    }
   })
 })
 
-const samples = shallowRef<ParsedModel[]>([
-  selectedModel.value
-])
+const samples = shallowRef<ParsedModel[]>([selectedModel.value])
 
 addContent(table, "table.obj")
 addContent(lowPolyTree, "low-poly-tree.obj")
@@ -251,57 +260,49 @@ const rotation = ref(true)
 
 const exportToFile = () => {
   const current = selectedModel.value
-  const html = renderToHtml(current.name, current.faces, lightMode.value, rotation.value )
+  const html = renderToHtml(current.name, current.faces, lightMode.value, rotation.value)
   console.log(html)
-  const blob = new Blob([html], { type: 'text/html' })
-  downloadBlob(blob, current.name + '.html')
+  const blob = new Blob([html], { type: "text/html" })
+  downloadBlob(blob, current.name + ".html")
 }
+const uv = ref(true)
 </script>
 
 <template>
-  <input
-    class="hidden-input"
-    type="file"
-    ref="fileInput"
-    @change="onFileChange"
-  />
+  <input class="hidden-input" type="file" ref="fileInput" @change="onFileChange" />
   <div class="app" @drop="onDrop" @dragover.prevent>
     <div class="root">
       <div class="scene" :class="{ rotation }">
-        <div
-          class="item"
-          v-for="(item, index) of mappedTransforms"
-          :key="index"
-          :style="{
-            transform: item.transform,
-            borderLeftColor: item.color
-          }"
-        ></div>
+        <template v-for="(item, index) of mappedTransforms" :key="index">
+          <template v-if="!uv || !item.textureTransform">
+            <div class="item" :style="{
+              transform: item.transform,
+              borderLeftColor: item.color
+            }">
+            </div>
+          </template>
+          <template v-else>
+            <TexturedItem
+              :transform="item.transform"
+              :texture-transform="item.textureTransform"
+              :texture-src="lowPolyTreeTexture"
+            ></TexturedItem>
+          </template>
+        </template>
       </div>
     </div>
     <div class="samples">
       <button class="sample add" @click="fileInput?.click()"></button>
-      <button
-        class="sample"
-        v-for="(sample, index) of samples"
-        :key="index"
-        @click="loadSample(sample)"
-      >
+      <button class="sample" v-for="(sample, index) of samples" :key="index" @click="loadSample(sample)">
         {{ sample.name }} <br />
         {{ sample.faces.length }} faces
       </button>
     </div>
     <div class="controls">
-      <button class="control" @click="exportToFile">
-        Export as html
-      </button>
-      <button class="control" @click="rotation = !rotation">
-        Rotation: {{ rotation ? "on" : "off" }}
-      </button>
-      <button
-        class="control"
-        @click="lightMode = lightMode === 'diffuse' ? 'normal' : 'diffuse'"
-      >
+      <button class="control" @click="exportToFile">Export as html</button>
+      <button class="control" @click="uv = !uv">uv: {{ uv ? "on" : "off" }}</button>
+      <button class="control" @click="rotation = !rotation">Rotation: {{ rotation ? "on" : "off" }}</button>
+      <button class="control" @click="lightMode = lightMode === 'diffuse' ? 'normal' : 'diffuse'">
         Light: {{ lightMode }}
       </button>
     </div>
@@ -361,7 +362,6 @@ const exportToFile = () => {
   height: 0;
   border-bottom: 100px solid transparent;
   border-left: 100px solid rgba(100, 100, 100, 0.5);
-  filter: blur(0px);
 }
 
 .samples {

@@ -281,7 +281,7 @@ const enableTexture = ref(false)
   <div class="app" @drop="onDrop" @dragover.prevent>
     <div class="root">
       <div class="scene" :class="{ rotation }">
-        <template v-for="(item, index) of mappedTransforms" :key="index">
+        <template v-for="(item, _index) of mappedTransforms" :key="_index">
           <template v-if="!enableTexture || !item.textureTransform || selectedModel.texture == null">
             <div
               class="item"

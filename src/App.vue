@@ -400,6 +400,7 @@ const enableTexture = ref(false)
   align-items: center;
   justify-content: center;
   background: #333;
+  color: white;
 }
 
 .sample.add::after,
@@ -442,5 +443,6 @@ const enableTexture = ref(false)
   align-items: center;
   justify-content: center;
   margin: 4px;
+  color: white;
 }
 </style>

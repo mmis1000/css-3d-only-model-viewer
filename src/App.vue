@@ -12,7 +12,7 @@ import { renderToHtml } from "./utils/exportToHtml"
 import { downloadBlob } from "./utils/downloadBlob"
 import { ParsedModel, FaceData } from "./interfaces"
 import { INITIAL_FACES, LIGHT } from "./constants"
-import TexturedItem from './components/TexturedItem.vue'
+import TexturedItem from "./components/TexturedItem.vue"
 import lowPolyTreeTexture from "./assets/low-poly-tree.png"
 
 const TARGET_WIDTH = 300
@@ -130,13 +130,14 @@ const handleFile = async (file: File) => {
   // const res = parseText(res)
 }
 
-const addContent = (text: string, filename: string) => {
+const addContent = (text: string, filename: string, texture?: string) => {
   const faces = parseText(text)
   samples.value = [
     ...samples.value,
     {
       name: filename,
-      faces
+      faces,
+      ...(texture ? { texture } : {})
     }
   ]
 }
@@ -151,7 +152,7 @@ const parseText = (text: string) => {
           "f" as "f",
           ...values.map(
             (i) =>
-              i.split("/").map((i) => ((i != null && i != '') ? Number(i) : undefined)) as [
+              i.split("/").map((i) => (i != null && i != "" ? Number(i) : undefined)) as [
                 v: number,
                 vt: number | undefined,
                 vn: number | undefined
@@ -212,10 +213,10 @@ const parseText = (text: string) => {
       const uv: [vec2, vec2, vec2] | undefined =
         first[1] != null
           ? [
-            textureVertexs[face[0][1]! - 1].slice(1) as vec2,
-            textureVertexs[face[1 + i][1]! - 1].slice(1) as vec2,
-            textureVertexs[face[2 + i][1]! - 1].slice(1) as vec2
-          ]
+              textureVertexs[face[0][1]! - 1].slice(1) as vec2,
+              textureVertexs[face[1 + i][1]! - 1].slice(1) as vec2,
+              textureVertexs[face[2 + i][1]! - 1].slice(1) as vec2
+            ]
           : undefined
 
       mappedFaces.push({
@@ -236,7 +237,14 @@ const selectedModel = shallowRef<ParsedModel>({
 const mappedTransforms = computed(() => {
   return selectedModel.value.faces.map((face) => {
     const res = mapToTransformAndColor(INITIAL_FACES, face.vertex, lightMode.value, LIGHT)
-    const textureTransform = (uv.value && face.uv) ? projectUV(face.uv, [[0, 0], [1, 0], [0, 1]]) : undefined
+    const textureTransform =
+      enableTexture.value && face.uv
+        ? projectUV(face.uv.map((i) => [i[0] * 100, 100 - i[1] * 100]) as [vec2, vec2, vec2], [
+            [0, 0],
+            [100, 0],
+            [0, 100]
+          ])
+        : undefined
     return {
       ...res,
       textureTransform
@@ -247,7 +255,7 @@ const mappedTransforms = computed(() => {
 const samples = shallowRef<ParsedModel[]>([selectedModel.value])
 
 addContent(table, "table.obj")
-addContent(lowPolyTree, "low-poly-tree.obj")
+addContent(lowPolyTree, "low-poly-tree.obj", lowPolyTreeTexture)
 addContent(streetLamp, "street-lamp.obj")
 addContent(teapot, "teapot.obj")
 addContent(tree, "tree.obj")
@@ -265,7 +273,7 @@ const exportToFile = () => {
   const blob = new Blob([html], { type: "text/html" })
   downloadBlob(blob, current.name + ".html")
 }
-const uv = ref(true)
+const enableTexture = ref(false)
 </script>
 
 <template>
@@ -274,18 +282,20 @@ const uv = ref(true)
     <div class="root">
       <div class="scene" :class="{ rotation }">
         <template v-for="(item, index) of mappedTransforms" :key="index">
-          <template v-if="!uv || !item.textureTransform">
-            <div class="item" :style="{
-              transform: item.transform,
-              borderLeftColor: item.color
-            }">
-            </div>
+          <template v-if="!enableTexture || !item.textureTransform || selectedModel.texture == null">
+            <div
+              class="item"
+              :style="{
+                transform: item.transform,
+                borderLeftColor: item.color
+              }"
+            ></div>
           </template>
           <template v-else>
             <TexturedItem
               :transform="item.transform"
               :texture-transform="item.textureTransform"
-              :texture-src="lowPolyTreeTexture"
+              :texture-src="selectedModel.texture"
             ></TexturedItem>
           </template>
         </template>
@@ -300,7 +310,7 @@ const uv = ref(true)
     </div>
     <div class="controls">
       <button class="control" @click="exportToFile">Export as html</button>
-      <button class="control" @click="uv = !uv">uv: {{ uv ? "on" : "off" }}</button>
+      <button class="control" @click="enableTexture = !enableTexture">texture: {{ enableTexture ? "on" : "off" }}</button>
       <button class="control" @click="rotation = !rotation">Rotation: {{ rotation ? "on" : "off" }}</button>
       <button class="control" @click="lightMode = lightMode === 'diffuse' ? 'normal' : 'diffuse'">
         Light: {{ lightMode }}

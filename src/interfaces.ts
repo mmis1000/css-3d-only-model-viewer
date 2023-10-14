@@ -8,4 +8,5 @@ export interface FaceData {
 export interface ParsedModel {
   name: string
   faces: FaceData[]
+  texture?: string
 }

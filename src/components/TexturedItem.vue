@@ -1,5 +1,5 @@
 <template>
-  <div class="item" :style="itemStyle">
+  <div class="textured-item" :style="itemStyle">
     <div class="texture" :style="textureStyle"></div>
   </div>
 </template>
@@ -22,7 +22,7 @@ const textureStyle = computed(() => ({
 }))
 </script>
 <style scoped>
-.item {
+.textured-item {
   position: absolute;
   left: 0;
   top: 0;
@@ -33,6 +33,14 @@ const textureStyle = computed(() => ({
 }
 
 .texture {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+
+  transform-origin: 0 0;
+
   background-size: 100% 100%;
   background-repeat: no-repeat;
   background-position: 0 0;

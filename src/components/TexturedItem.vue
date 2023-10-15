@@ -30,6 +30,7 @@ const textureStyle = computed(() => ({
   width: 100px;
   height: 100px;
   clip-path: polygon(0 0, 100% 0, 0 100%);
+  background-color: black;
 }
 
 .texture {

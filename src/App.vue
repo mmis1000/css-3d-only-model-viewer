@@ -289,6 +289,7 @@ const cameraTransform = computed(() => {
                 transform: item.transform,
                 borderLeftColor: item.color
               }"
+              :key="_index"
             ></div>
           </template>
           <template v-else>
@@ -296,6 +297,7 @@ const cameraTransform = computed(() => {
               :transform="item.transform"
               :texture-uv="item.uv"
               :texture-src="selectedModel.texture"
+              :key="_index"
             ></TexturedItem>
           </template>
         </template>

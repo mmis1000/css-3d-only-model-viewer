@@ -376,6 +376,7 @@ const cameraTransform = computed(() => {
   position: relative;
   transform-style: preserve-3d;
   transform: scaleY(-1) rotateY(0deg);
+  will-change: transform;
 }
 
 .scene.rotation {

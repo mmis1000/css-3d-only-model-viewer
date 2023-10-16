@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { vec2, vec3 } from "gl-matrix"
+import { mat4, vec2, vec3 } from "gl-matrix"
 import { computed, ref, shallowRef } from "vue"
 import teapot from "./assets/teapot.obj?raw"
 import table from "./assets/table.obj?raw"
@@ -20,7 +20,18 @@ import blockTexture from "./assets/block.png"
 
 const TARGET_WIDTH = 300
 
+// settings
 const lightMode = ref<"diffuse" | "normal">("diffuse")
+const rotation = ref(true)
+const enableTexture = ref(false)
+
+rotation.value = false
+enableTexture.value = true
+
+const cameraMatrix = ref(mat4.create())
+const resetCamera = () => {
+  cameraMatrix.value = mat4.create()
+}
 
 const onDrop = (ev: DragEvent) => {
   ev.preventDefault()
@@ -201,10 +212,9 @@ addContent(tree, "tree.obj")
 selectedModel.value = samples.value[0]
 
 const loadSample = (newData: ParsedModel) => {
+  resetCamera()
   selectedModel.value = newData
 }
-
-const rotation = ref(true)
 
 const exportToFile = () => {
   const current = selectedModel.value
@@ -214,14 +224,70 @@ const exportToFile = () => {
   const blob = new Blob([html], { type: "text/html" })
   downloadBlob(blob, current.name + ".html")
 }
-const enableTexture = ref(false)
+const moving = ref(false)
+const firstPoint = shallowRef<[number, number]>([0, 0])
+const secondPoint = shallowRef<[number, number]>([0, 0])
+const onPointerDown = (ev: PointerEvent) => {
+  moving.value = true
+  firstPoint.value = [
+    ev.clientX,
+    ev.clientY
+  ]
+  secondPoint.value = [
+    ev.clientX,
+    ev.clientY
+  ]
+  console.log(firstPoint.value)
+}
+const onPointerMove = (ev: PointerEvent) => {
+  if (moving.value) {
+    secondPoint.value = [
+      ev.clientX,
+      ev.clientY
+    ]
+    console.log(secondPoint.value)
+  }
+}
+const onPointerUp = (_ev: PointerEvent) => {
+  const normal = [secondPoint.value[1] - firstPoint.value[1], secondPoint.value[0] - firstPoint.value[0], ] as const
+  const distance = vec2.distance(firstPoint.value, secondPoint.value)
+  const nm = mat4.create()
+  mat4.rotate(nm, nm, distance / 200 * Math.PI, [...normal, 0])
+  mat4.mul(nm, nm, cameraMatrix.value)
+  cameraMatrix.value = nm
+
+  moving.value = false
+  firstPoint.value = [0, 0]
+  secondPoint.value = [0, 0]
+}
+const onPointerCancel = (_ev: PointerEvent) => {
+  moving.value = false
+  firstPoint.value = [0, 0]
+  secondPoint.value = [0, 0]
+}
+const liveCameraMatrix = computed(() => {
+  if (!moving.value || vec2.equals(firstPoint.value, secondPoint.value)) {
+    return cameraMatrix.value
+  } else {
+    const normal = [secondPoint.value[1] - firstPoint.value[1], secondPoint.value[0] - firstPoint.value[0], ] as const
+    const distance = vec2.distance(firstPoint.value, secondPoint.value)
+    const nm = mat4.create()
+    mat4.rotate(nm, nm, distance / 200 * Math.PI, [...normal, 0])
+    mat4.mul(nm, nm, cameraMatrix.value)
+    return nm
+  }
+})
+const cameraTransform = computed(() => {
+  // invert y axis first because it is how html axis works
+  return `scaleY(-1) matrix3d(${[...liveCameraMatrix.value].join(',')})`
+})
 </script>
 
 <template>
   <input class="hidden-input" type="file" ref="fileInput" @change="onFileChange" />
   <div class="app" @drop="onDrop" @dragover.prevent>
-    <div class="root">
-      <div v-if="selectedModel" class="scene" :class="{ rotation }">
+    <div class="root" @pointerdown="onPointerDown" @pointermove="onPointerMove" @pointerup="onPointerUp" @pointercancel="onPointerCancel">
+      <div v-if="selectedModel" class="scene" :class="{ rotation }" :style="rotation ? {} : { transform: cameraTransform }">
         <template v-for="(item, _index) of mappedTransforms" :key="_index">
           <template v-if="!enableTexture || !item.textureTransform || selectedModel.texture == null">
             <div
@@ -290,6 +356,7 @@ const enableTexture = ref(false)
   bottom: 0;
   right: 0;
   perspective: 800px;
+  touch-action: none;
 }
 
 .scene {

@@ -31,6 +31,7 @@ const textureStyle = computed(() => ({
   height: 100px;
   clip-path: polygon(0 0, 100% 0, 0 100%);
   background-color: black;
+  user-select: none;
 }
 
 .texture {

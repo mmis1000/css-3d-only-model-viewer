@@ -25,9 +25,15 @@ const lightMode = ref<"diffuse" | "normal">("diffuse")
 const rotation = ref(true)
 const enableTexture = ref(true)
 
-const cameraMatrix = ref(mat4.create())
+const getInitialCamera = () => {
+  const m = mat4.create()
+  mat4.rotate(m, m, Math.PI / 8, [1, 0, 0])
+  mat4.rotate(m, m, -Math.PI / 4, [0, 1, 0])
+  return m
+}
+const cameraMatrix = ref(getInitialCamera())
 const resetCamera = () => {
-  cameraMatrix.value = mat4.create()
+  cameraMatrix.value = getInitialCamera()
 }
 
 const onDrop = (ev: DragEvent) => {
@@ -331,15 +337,23 @@ const cameraTransform = computed(() => {
 
 @keyframes r {
   0% {
-    transform: scaleY(-1) rotateX(0deg) rotateY(1deg);
+    transform: scaleY(-1) rotateX(0deg) rotateY(0deg);
+  }
+
+  25% {
+    transform: scaleY(-1) rotateX(90deg) rotateY(-180deg);
   }
 
   50% {
-    transform: scaleY(-1) rotateX(180deg) rotateY(181deg);
+    transform: scaleY(-1) rotateX(180deg) rotateY(-360deg);
+  }
+
+  75% {
+    transform: scaleY(-1) rotateX(270deg) rotateY(-540deg);
   }
 
   100% {
-    transform: scaleY(-1) rotateX(360deg) rotateY(361deg);
+    transform: scaleY(-1) rotateX(360deg) rotateY(-720deg);
   }
 }
 
@@ -361,7 +375,7 @@ const cameraTransform = computed(() => {
   height: 0;
   position: relative;
   transform-style: preserve-3d;
-  transform: scaleY(-1) rotateY(1deg);
+  transform: scaleY(-1) rotateY(0deg);
 }
 
 .scene.rotation {

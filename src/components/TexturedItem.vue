@@ -46,5 +46,6 @@ const textureStyle = computed(() => ({
   background-size: 100% 100%;
   background-repeat: no-repeat;
   background-position: 0 0;
+  background-color: black;
 }
 </style>

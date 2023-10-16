@@ -240,7 +240,6 @@ const onPointerDown = (ev: PointerEvent) => {
     ev.clientX,
     ev.clientY
   ]
-  console.log(firstPoint.value)
 }
 const onPointerMove = (ev: PointerEvent) => {
   if (moving.value) {
@@ -248,7 +247,6 @@ const onPointerMove = (ev: PointerEvent) => {
       ev.clientX,
       ev.clientY
     ]
-    console.log(secondPoint.value)
   }
 }
 const onPointerUp = (_ev: PointerEvent) => {

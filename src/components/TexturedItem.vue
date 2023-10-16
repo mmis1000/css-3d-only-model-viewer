@@ -4,21 +4,34 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed } from 'vue';
+import { vec2 } from 'gl-matrix';
+import { PropType, computed } from 'vue';
+import { projectUV } from '../utils/matrixHelper';
 
 const props = defineProps({
   transform: String,
   textureSrc: String,
-  textureTransform: String
+  textureUv: Array as unknown as PropType<[vec2, vec2, vec2]>
 })
 
 const itemStyle = computed(() => ({
   transform: props.transform
 }))
 
+const textureTransform = computed(() => {
+  if (props.textureUv == null) {
+    return null
+  }
+  return projectUV(props.textureUv.map((i) => [i[0] * 100, 100 - i[1] * 100]) as [vec2, vec2, vec2], [
+    [0, 0],
+    [100, 0],
+    [0, 100]
+  ])
+})
+
 const textureStyle = computed(() => ({
   backgroundImage: `url("${props.textureSrc}")`,
-  transform: props.textureTransform
+  transform: textureTransform.value ?? ''
 }))
 </script>
 <style scoped>

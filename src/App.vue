@@ -8,7 +8,7 @@ import streetLamp from "./assets/street-lamp.obj?raw"
 import lowPolyTree from "./assets/low-poly-tree.obj?raw"
 import tree from "./assets/tree.obj?raw"
 import Corner from "./components/Corner.vue"
-import { mapToTransformAndColor, projectUV } from "./utils/matrixHelper"
+import { mapToTransformAndColor } from "./utils/matrixHelper"
 import { renderToHtml } from "./utils/exportToHtml"
 import { downloadBlob } from "./utils/downloadBlob"
 import { ParsedModel, FaceData } from "./interfaces"
@@ -189,17 +189,9 @@ const selectedModel = shallowRef<ParsedModel | null>(null)
 const mappedTransforms = computed(() => {
   return selectedModel.value?.faces.map((face) => {
     const res = mapToTransformAndColor(INITIAL_FACES, face.vertex, lightMode.value, LIGHT)
-    const textureTransform =
-      enableTexture.value && face.uv
-        ? projectUV(face.uv.map((i) => [i[0] * 100, 100 - i[1] * 100]) as [vec2, vec2, vec2], [
-            [0, 0],
-            [100, 0],
-            [0, 100]
-          ])
-        : undefined
     return {
       ...res,
-      textureTransform
+      uv: face.uv
     }
   })
 })
@@ -290,7 +282,7 @@ const cameraTransform = computed(() => {
     <div class="root" @pointerdown="onPointerDown" @pointermove="onPointerMove" @pointerup="onPointerUp" @pointercancel="onPointerCancel">
       <div v-if="selectedModel" class="scene" :class="{ rotation }" :style="rotation ? {} : { transform: cameraTransform }">
         <template v-for="(item, _index) of mappedTransforms" :key="_index">
-          <template v-if="!enableTexture || !item.textureTransform || selectedModel.texture == null">
+          <template v-if="!enableTexture || !item.uv || selectedModel.texture == null">
             <div
               class="item"
               :style="{
@@ -302,7 +294,7 @@ const cameraTransform = computed(() => {
           <template v-else>
             <TexturedItem
               :transform="item.transform"
-              :texture-transform="item.textureTransform"
+              :texture-uv="item.uv"
               :texture-src="selectedModel.texture"
             ></TexturedItem>
           </template>

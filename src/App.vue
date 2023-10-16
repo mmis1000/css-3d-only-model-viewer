@@ -23,10 +23,7 @@ const TARGET_WIDTH = 300
 // settings
 const lightMode = ref<"diffuse" | "normal">("diffuse")
 const rotation = ref(true)
-const enableTexture = ref(false)
-
-rotation.value = false
-enableTexture.value = true
+const enableTexture = ref(true)
 
 const cameraMatrix = ref(mat4.create())
 const resetCamera = () => {

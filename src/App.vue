@@ -125,21 +125,20 @@ const parseText = (text: string, width = TARGET_WIDTH) => {
     })
     .filter(<T>(i: T): i is NonNullable<T> => i != null)
   // console.log(entries)
-  const vertexs = entries.filter(<T extends (typeof entries)[number]>(i: T): i is T & { 0: "v" } => i[0] === "v")
-  const textureVertexs = entries.filter(
+  const vertices = entries.filter(<T extends (typeof entries)[number]>(i: T): i is T & { 0: "v" } => i[0] === "v")
+  const textureVertices = entries.filter(
     <T extends (typeof entries)[number]>(i: T): i is T & { 0: "vt" } => i[0] === "vt"
   )
   const faceIds = entries
     .filter(<T extends (typeof entries)[number]>(i: T): i is T & { 0: "f" } => i[0] === "f")
     .map((i) => i.slice(1)) as [v: number, vt: number | undefined, vn: number | undefined][][]
-  // console.log(vertexs, faces)
 
-  const maxX = Math.max(...vertexs.map((i) => i[1]))
-  const minX = Math.min(...vertexs.map((i) => i[1]))
-  const maxY = Math.max(...vertexs.map((i) => i[2]))
-  const minY = Math.min(...vertexs.map((i) => i[2]))
-  const maxZ = Math.max(...vertexs.map((i) => i[3]))
-  const minZ = Math.min(...vertexs.map((i) => i[3]))
+  const maxX = Math.max(...vertices.map((i) => i[1]))
+  const minX = Math.min(...vertices.map((i) => i[1]))
+  const maxY = Math.max(...vertices.map((i) => i[2]))
+  const minY = Math.min(...vertices.map((i) => i[2]))
+  const maxZ = Math.max(...vertices.map((i) => i[3]))
+  const minZ = Math.min(...vertices.map((i) => i[3]))
 
   const lX = maxX - minX
   const lY = maxY - minY
@@ -160,17 +159,17 @@ const parseText = (text: string, width = TARGET_WIDTH) => {
       const first = face[0]
 
       const vertex: [vec3, vec3, vec3] = [
-        translate(vertexs[face[0][0] - 1].slice(1) as vec3),
-        translate(vertexs[face[1 + i][0] - 1].slice(1) as vec3),
-        translate(vertexs[face[2 + i][0] - 1].slice(1) as vec3)
+        translate(vertices[face[0][0] - 1].slice(1) as vec3),
+        translate(vertices[face[1 + i][0] - 1].slice(1) as vec3),
+        translate(vertices[face[2 + i][0] - 1].slice(1) as vec3)
       ]
 
       const uv: [vec2, vec2, vec2] | undefined =
         first[1] != null
           ? [
-              textureVertexs[face[0][1]! - 1].slice(1) as vec2,
-              textureVertexs[face[1 + i][1]! - 1].slice(1) as vec2,
-              textureVertexs[face[2 + i][1]! - 1].slice(1) as vec2
+              textureVertices[face[0][1]! - 1].slice(1) as vec2,
+              textureVertices[face[1 + i][1]! - 1].slice(1) as vec2,
+              textureVertices[face[2 + i][1]! - 1].slice(1) as vec2
             ]
           : undefined
 

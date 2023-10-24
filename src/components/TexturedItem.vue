@@ -44,7 +44,7 @@ const croppingStyle = computed(() => {
   const xScale = 1 / (maxU - minU)
   const yScale = 1 / (maxV - minV)
 
-  // wavefront: u ↑ v →
+  // wavefront: u → v ↑
   // web: x → y ↓
   const xOrigin = minU
   const yOrigin = 1 - maxV

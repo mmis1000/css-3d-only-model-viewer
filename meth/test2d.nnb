@@ -82,7 +82,7 @@
                                 "<td>-2.9916000366210938</td></tr>\r",
                                 "<tr><td>1.7999999523162842</td>\r",
                                 "<td>1.7999999523162842</td>\r",
-                                "<td>1.7999999523162842</td></tr>\r",
+                                "<td>2</td></tr>\r",
                                 "<tr><td>1</td>\r",
                                 "<td>1</td>\r",
                                 "<td>1</td></tr></table>"
@@ -107,7 +107,7 @@
                                 "<td>-0.00839996337890625</td>\r",
                                 "<td>-2.9832000732421875</td></tr>\r",
                                 "<tr><td>0</td>\r",
-                                "<td>0</td>\r",
+                                "<td>0.20000004768371582</td>\r",
                                 "<td>1.7999999523162842</td></tr>\r",
                                 "<tr><td>0</td>\r",
                                 "<td>0</td>\r",
@@ -151,7 +151,7 @@
                                 "<td>-0.00839996337890625</td>\r",
                                 "<td>-2.9832000732421875</td></tr>\r",
                                 "<tr><td>0</td>\r",
-                                "<td>0</td>\r",
+                                "<td>0.20000004768371582</td>\r",
                                 "<td>1.7999999523162842</td></tr>\r",
                                 "<tr><td>0</td>\r",
                                 "<td>0</td>\r",
@@ -170,7 +170,7 @@
                                 "<td>-2.9916000366210938</td></tr>\r",
                                 "<tr><td>1.7999999523162842</td>\r",
                                 "<td>1.7999999523162842</td>\r",
-                                "<td>1.7999999523162842</td></tr>\r",
+                                "<td>2</td></tr>\r",
                                 "<tr><td>1</td>\r",
                                 "<td>1</td>\r",
                                 "<td>1</td></tr></table>"
@@ -195,7 +195,7 @@
                                 "<td>0</td>\r",
                                 "<td>0</td></tr>\r",
                                 "<tr><td>-0.00839996337890625</td>\r",
-                                "<td>0</td>\r",
+                                "<td>0.20000004768371582</td>\r",
                                 "<td>0</td></tr>\r",
                                 "<tr><td>-2.9832000732421875</td>\r",
                                 "<td>1.7999999523162842</td>\r",
@@ -293,9 +293,40 @@
         {
             "language": "typescript",
             "source": [
-                "const invertedMatrix = glMatrix.mat3.create()\nconst invertedFlippedMatrix = glMatrix.mat3.create()\nglMatrix.mat3.invert(invertedMatrix, [\n  transformMatrix[0], transformMatrix[1], transformMatrix[2],\n  transformMatrix[3], transformMatrix[4], transformMatrix[5],\n  transformMatrix[6], transformMatrix[7], transformMatrix[8]\n])\nglMatrix.mat3.invert(invertedFlippedMatrix, flippedMatrix)\ntable(3, transformMatrix)\ntable(3, flippedMatrix)\ntable(3, invertedMatrix)\ntable(3, invertedFlippedMatrix)"
+                "const invertedFlippedMatrix = glMatrix.mat3.create()\nglMatrix.mat3.invert(invertedFlippedMatrix, flippedMatrix)\ntable(3, invertedFlippedMatrix)\n\nconst result = glMatrix.vec3.create()\nglMatrix.vec3.transformMat3(result, [-2.991600, 1.800000, 1], invertedFlippedMatrix)\ntable(3, result)"
             ],
-            "outputs": []
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/html",
+                            "value": [
+                                "<style> table, th, tr { text-align: left; }</style><table><tr><td>-119.04814147949219</td>\r",
+                                "<td>0</td>\r",
+                                "<td>0</td></tr>\r",
+                                "<tr><td>-4.999999046325684</td>\r",
+                                "<td>4.999999046325684</td>\r",
+                                "<td>0</td></tr>\r",
+                                "<tr><td>-346.1444091796875</td>\r",
+                                "<td>-8.999998092651367</td>\r",
+                                "<td>1</td></tr></table>"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "items": [
+                        {
+                            "mime": "text/html",
+                            "value": [
+                                "<style> table, th, tr { text-align: left; }</style><table><tr><td>1.0000126361846924</td>\r",
+                                "<td>1.9073486612342094e-7</td>\r",
+                                "<td>1</td></tr></table>"
+                            ]
+                        }
+                    ]
+                }
+            ]
         }
     ]
 }

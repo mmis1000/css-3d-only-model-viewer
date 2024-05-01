@@ -69,7 +69,7 @@
         {
             "language": "typescript",
             "source": [
-                "const t1 = glMatrix.vec2.fromValues(-3.000000, 1.800000)\nconst t2 = glMatrix.vec2.fromValues(-2.991600, 1.800000)\nconst t3 = glMatrix.vec2.fromValues(-2.991600, 1.800000)\n\nconst target = Float32Array.from([\n    t1[0], t2[0], t3[0],\n    t1[1], t2[1], t3[1],\n    1, 1, 1,\n])\ntable(3, target)"
+                "const t1 = glMatrix.vec2.fromValues(-3.000000, 1.800000)\nconst t2 = glMatrix.vec2.fromValues(-2.991600, 1.800000)\nconst t3 = glMatrix.vec2.fromValues(-2.991600, 2.000000)\n\nconst target = Float32Array.from([\n    t1[0], t2[0], t3[0],\n    t1[1], t2[1], t3[1],\n    1, 1, 1,\n])\ntable(3, target)"
             ],
             "outputs": [
                 {
@@ -289,6 +289,13 @@
                     ]
                 }
             ]
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "const invertedMatrix = glMatrix.mat3.create()\nconst invertedFlippedMatrix = glMatrix.mat3.create()\nglMatrix.mat3.invert(invertedMatrix, [\n  transformMatrix[0], transformMatrix[1], transformMatrix[2],\n  transformMatrix[3], transformMatrix[4], transformMatrix[5],\n  transformMatrix[6], transformMatrix[7], transformMatrix[8]\n])\nglMatrix.mat3.invert(invertedFlippedMatrix, flippedMatrix)\ntable(3, transformMatrix)\ntable(3, flippedMatrix)\ntable(3, invertedMatrix)\ntable(3, invertedFlippedMatrix)"
+            ],
+            "outputs": []
         }
     ]
 }
